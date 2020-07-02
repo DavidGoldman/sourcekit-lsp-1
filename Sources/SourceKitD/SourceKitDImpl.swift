@@ -71,7 +71,7 @@ public final class SourceKitDImpl: SourceKitD {
     self.api.initialize()
     self.api.set_notification_handler { [weak self] rawResponse in
       guard let self = self else { return }
-      let handlers = self.lock.withLock { self._notificationHandlers.compactMap(\.value) }
+      let handlers = self.lock.withLock { self._notificationHandlers.compactMap { $0.value } }
 
       let response = SKDResponse(rawResponse, sourcekitd: self)
       for handler in handlers {

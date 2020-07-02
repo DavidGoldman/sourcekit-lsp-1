@@ -47,13 +47,16 @@ public final class SwiftPMWorkspace {
 
   let workspacePath: AbsolutePath
   let packageRoot: AbsolutePath
-  var packageGraph: PackageGraph
   let workspace: Workspace
   public let buildParameters: BuildParameters
   let fileSystem: FileSystem
 
+  var packageGraph: PackageGraph
   var fileToTarget: [AbsolutePath: TargetBuildDescription] = [:]
   var sourceDirToTarget: [AbsolutePath: TargetBuildDescription] = [:]
+
+  var queue = DispatchQueue(label: "\(SwiftPMWorkspace.self)-queue")
+  var fsWatcher: FSWatch!
 
   /// Creates a build system using the Swift Package Manager, if this workspace is a package.
   ///
@@ -112,6 +115,9 @@ public final class SwiftPMWorkspace {
       flags: buildSetup.flags)
 
     self.packageGraph = PackageGraph(rootPackages: [], requiredDependencies: [])
+    self.fsWatcher = FSWatch(paths: [packageRoot], block: { [unowned self] changes in
+      self.filesChanged(changes)
+    })
 
     try reloadPackage()
   }
@@ -140,6 +146,10 @@ public final class SwiftPMWorkspace {
 }
 
 extension SwiftPMWorkspace {
+
+  func filesChanged(_ changes: [AbsolutePath]) {
+    log("Files changed: \(changes)", level: .warning)
+  }
 
   /// (Re-)load the package settings by parsing the manifest and resolving all the targets and
   /// dependencies.
