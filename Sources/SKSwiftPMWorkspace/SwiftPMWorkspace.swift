@@ -360,9 +360,12 @@ extension SwiftPMWorkspace {
     args += ["-I", buildPath.pathString]
     args += td.compileArguments()
 
+    let workingDir = self.workspacePath.appending(component: ".build")
+    args = args.map { $0.replacingOccurrences(of: workingDir.pathString + "/", with: "") }
+
     return FileBuildSettings(
       compilerArguments: args,
-      workingDirectory: workspacePath.pathString)
+      workingDirectory: workingDir.pathString)
   }
 
   /// Retrieve settings for the given C-family language file, which is part of a known target build
